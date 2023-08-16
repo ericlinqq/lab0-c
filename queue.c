@@ -34,13 +34,26 @@ void q_free(struct list_head *l)
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
+    if (!head)
+        return false;
+    element_t *ele = malloc(sizeof(*ele));
+    if (!ele)
+        return false;
+    ele->value = strdup(s);
+    if (!ele->value) {
+        free(ele);
+        return false;
+    }
+    list_add(&ele->list, head);
     return true;
 }
 
 /* Insert an element at tail of queue */
 bool q_insert_tail(struct list_head *head, char *s)
 {
-    return true;
+    if (!head)
+        return false;
+    return q_insert_head(head->prev, s);
 }
 
 /* Remove an element from head of queue */
