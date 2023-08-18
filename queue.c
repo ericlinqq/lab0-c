@@ -177,10 +177,42 @@ void q_reverseK(struct list_head *head, int k)
             list_move(node, start);
     }
 }
+
+static void merge_two_lists(struct list_head *list1,
+                            struct list_head *list2,
+                            bool descend)
+{
+    if (!list1 || !list2)
+        return;
+    LIST_HEAD(temp_head);
+    while (!list_empty(list1) && !list_empty(list2)) {
+        // cppcheck-suppress nullPointer
+        element_t *list1_front = list_first_entry(list1, element_t, list);
+        // cppcheck-suppress nullPointer
+        element_t *list2_front = list_first_entry(list2, element_t, list);
+        int cmp = descend ? strcmp(list1_front->value, list2_front->value)
+                          : -strcmp(list1_front->value, list2_front->value);
+        list_move_tail((cmp > 0) ? list1->next : list2->next, &temp_head);
+    }
+    list_splice_tail_init(list1, &temp_head);
+    list_splice_tail_init(list2, &temp_head);
+    list_splice(&temp_head, list1);
 }
 
 /* Sort elements of queue in ascending/descending order */
-void q_sort(struct list_head *head, bool descend) {}
+void q_sort(struct list_head *head, bool descend)
+{
+    if (!head || list_empty(head) || list_is_singular(head))
+        return;
+    struct list_head *slow = head, *fast = head->next;
+    for (; fast != head && fast != head->prev; fast = fast->next->next)
+        slow = slow->next;
+    LIST_HEAD(left);
+    list_cut_position(&left, head, slow);
+    q_sort(&left, descend);
+    q_sort(head, descend);
+    merge_two_lists(head, &left, descend);
+}
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
