@@ -214,12 +214,35 @@ void q_sort(struct list_head *head, bool descend)
     merge_two_lists(head, &left, descend);
 }
 
+static inline int remove_nodes(struct list_head *head, bool descend)
+{
+    int size = 1;
+    // cppcheck-suppress nullPointer
+    element_t *cur = list_last_entry(head, element_t, list);
+    while (&cur->list != head->next) {
+        // cppcheck-suppress nullPointer
+        element_t *prev_ele = list_entry(cur->list.prev, element_t, list);
+        int cmp = descend ? -strcmp(prev_ele->value, cur->value)
+                          : strcmp(prev_ele->value, cur->value);
+        if (cmp > 0) {
+            list_del(&prev_ele->list);
+            q_release_element(prev_ele);
+        } else {
+            cur = prev_ele;
+            size++;
+        }
+    }
+    return size;
+}
+
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
 int q_ascend(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    if (!head || list_empty(head))
+        return 0;
+    return remove_nodes(head, false);
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
@@ -227,7 +250,9 @@ int q_ascend(struct list_head *head)
 int q_descend(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    if (!head || list_empty(head))
+        return 0;
+    return remove_nodes(head, true);
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
