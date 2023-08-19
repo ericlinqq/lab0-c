@@ -262,15 +262,16 @@ int q_merge(struct list_head *head, bool descend)
     // https://leetcode.com/problems/merge-k-sorted-lists/
     if (!head || list_empty(head) || list_is_singular(head))
         return 0;
-    queue_contex_t *cur = NULL;
     // cppcheck-suppress nullPointer
-    queue_contex_t *first = list_first_entry(head, queue_contex_t, chain);
-    int size = first->size;
-    list_for_each_entry (cur, head, chain) {
-        if (cur == first)
-            continue;
-        merge_two_lists(first->q, cur->q, descend);
-        size += cur->size;
+    queue_contex_t *first_entry = list_first_entry(head, queue_contex_t, chain);
+    struct list_head *cur = head->next->next;
+    int size = first_entry->size;
+    while (cur != head) {
+        // cppcheck-suppress nullPointer
+        queue_contex_t *cur_entry = list_entry(cur, queue_contex_t, chain);
+        merge_two_lists(first_entry->q, cur_entry->q, descend);
+        size += cur_entry->size;
+        cur = cur->next;
     }
     return size;
 }
