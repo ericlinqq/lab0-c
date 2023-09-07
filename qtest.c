@@ -42,6 +42,7 @@ extern int show_entropy;
  * OK as long as head field of queue_t structure is in first position in
  * solution code
  */
+#include "k_sort.h"
 #include "queue.h"
 #include "shuffle.h"
 
@@ -75,6 +76,7 @@ static int fail_count = 0;
 static int string_length = MAXSTRING;
 
 static int descend = 0;
+static int sort = 0;
 
 #define MIN_RANDSTR_LEN 5
 #define MAX_RANDSTR_LEN 10
@@ -599,8 +601,19 @@ bool do_sort(int argc, char *argv[])
     error_check();
 
     set_noallocate_mode(true);
-    if (current && exception_setup(true))
-        q_sort(current->q, descend);
+    if (current && exception_setup(true)) {
+        switch (sort) {
+        case 0:
+            q_sort(current->q, descend);
+            break;
+        case 1:
+            q_ksort(current->q, descend);
+            break;
+        default:
+            q_sort(current->q, descend);
+            break;
+        }
+    }
     exception_cancel();
     set_noallocate_mode(false);
 
@@ -1085,6 +1098,7 @@ static void console_init()
               "Number of times allow queue operations to return false", NULL);
     add_param("descend", &descend,
               "Sort and merge queue in ascending/descending order", NULL);
+    add_param("sort", &sort, "Different sort algorithm to use", NULL);
 }
 
 /* Signal handlers */
